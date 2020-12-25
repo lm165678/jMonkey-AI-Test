@@ -1,0 +1,24 @@
+Material MyMaterial : Common/MatDefs/Light/Lighting.j3md {
+    MaterialParameters {
+        Diffuse : 0.0 0.0 0.0 1.0
+        UseMaterialColors : false
+        ParallaxHeight : 0.05
+        Ambient : 0.0 0.0 0.0 1.0
+        BackfaceShadows : false
+        AlphaDiscardThreshold : 0.01
+        Specular : 0.0 0.0 0.0 1.0
+        Shininess : 16.0
+        DiffuseMap : Flip Repeat "Models/sands/map_2_objects.png"
+    }
+    AdditionalRenderState {
+      PointSprite On
+      FaceCull Back
+      AlphaTestFalloff 0.0
+      DepthWrite On
+      ColorWrite On
+      PolyOffset 0.0 0.0
+      DepthTest On
+      Blend Alpha
+      Wireframe Off
+    }
+}
