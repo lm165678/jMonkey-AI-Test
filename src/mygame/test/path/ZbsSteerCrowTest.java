@@ -108,7 +108,7 @@ public class ZbsSteerCrowTest extends FastApp implements ActionListener{
         navigationControl.setPointDistanceClip(2.0f);
         Node zbs = (Node) rootNode.getChild(zbsName);
         final SteerZbsControl zbsControl = new SteerZbsControl(bulletAppState);
-        zbsControl.setRunMoveSpeed(1.0f);
+        
 //        zbsControl.setAttackDisSq(0.5f);
 //        zbsControl.setWalkDisSq(2.5f);
         // 这个值决定距离目标导航点结束时的误差
@@ -132,6 +132,8 @@ public class ZbsSteerCrowTest extends FastApp implements ActionListener{
         });
         zbs.addControl(zbsControl);
         zbs.addControl(navigationControl);
+        
+        zbsControl.setRunMoveSpeed(1.0f);
         
         crowdPathfinderActuator.addCrowd(navigationControl);
         crowdNavigationControls.add(navigationControl);

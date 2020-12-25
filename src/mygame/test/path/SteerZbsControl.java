@@ -11,6 +11,8 @@ import com.jme3.bounding.BoundingBox;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.PhysicsTickListener;
+import com.jme3.bullet.collision.PhysicsCollisionEvent;
+import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -26,7 +28,7 @@ import java.util.List;
  *
  * @author JhonKkk
  */
-public class SteerZbsControl extends AbstractControl implements PhysicsTickListener{
+public class SteerZbsControl extends AbstractControl implements PhysicsCollisionListener{
     // 邻居
     private List<Spatial> neighbours;
     private boolean isInit = false;
@@ -81,17 +83,25 @@ public class SteerZbsControl extends AbstractControl implements PhysicsTickListe
     public float getAttackDisSq() {
         return attackDisSq;
     }
+
+    public float getNeighboursRadius() {
+        return neighboursRadius;
+    }
+
+    public void setNeighboursRadius(float neighboursRadius) {
+        this.neighboursRadius = neighboursRadius;
+    }
+    
     
     protected void onInit(){
         animChannel = ((Node)spatial).getChild("speed").getControl(AnimControl.class).createChannel();
         BoundingBox bb = (BoundingBox) spatial.getWorldBound();
-        neighboursRadius = bb.getXExtent() * 2.5f * 5.5f;
+        neighboursRadius = (bb.getXExtent() * 1.5f + runMoveSpeed);
         walkDisSq = bb.getXExtent() * 2.5f * 8;
         attackDisSq = bb.getXExtent() * 2.5f * 1.2f;
         betterCharacterControl = new BetterCharacterControl(bb.getXExtent() * 2.5f, bb.getYExtent() * 2.5f, 8);
         spatial.addControl(betterCharacterControl);
         this.bulletAppState.getPhysicsSpace().add(betterCharacterControl);
-        this.bulletAppState.getPhysicsSpace().addTickListener(this);
         // 如果没有这一行,则第一次进入disSq <= 4这阶段,第一次没有调用changeDir()
         // 将导致在"disSq <= 4"的内部逻辑中插值无效的朝向
         // 由于如果zbs刚开始就位于disSq <= 4内,所以这个zbs已经执行过changeDir()
@@ -162,7 +172,15 @@ public class SteerZbsControl extends AbstractControl implements PhysicsTickListe
         neighbours.clear();
         SteerBehaviorServer.getInstance().findNeighbours(spatial, neighbours, neighboursRadius);
         Vector3f steer = SteerBehaviorServer.getInstance().calculateSeparationForce(spatial, null, neighbours);
-        targetDir.addLocal(steer);
+        steer.y = 0;
+        steer.normalizeLocal();
+        // 判断是否和当前方向垂直相反,如果是,则随机选择左右45°方向
+        if(targetDir.negate().dot(steer) >= 0.85f){
+            Quaternion q = new Quaternion();
+            q.fromAngleAxis((float) Math.toRadians(Math.random() > 0.5f ? 45 : -45), Vector3f.UNIT_Y).multLocal(steer);
+        }
+        // 权重0.5f
+        targetDir.addLocal(steer.multLocal(0.25f));
         targetDir.y = 0;
         targetDir.normalizeLocal();
         changeAmnt = 0;
@@ -287,14 +305,10 @@ public class SteerZbsControl extends AbstractControl implements PhysicsTickListe
     }
 
     @Override
-    public void prePhysicsTick(PhysicsSpace space, float tpf) {
-        if(isNav){
-            // 如果处于导航中,则判断释放碰撞到物体
-        }
+    public void collision(PhysicsCollisionEvent event) {
+        
     }
 
-    @Override
-    public void physicsTick(PhysicsSpace space, float tpf) {
-    }
+    
     
 }
